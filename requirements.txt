@@ -1,0 +1,4 @@
+flask
+moviepy
+edge-tts
+gunicorn
