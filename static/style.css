@@ -3,29 +3,54 @@ font-family: Arial;
 background:#0f172a;
 color:white;
 text-align:center;
+margin:0;
+padding:0;
 }
 
 .container{
 width:90%;
 max-width:600px;
 margin:auto;
+padding:20px;
 }
 
-video{
+video,
+audio{
 width:100%;
 border-radius:10px;
+margin-top:10px;
 }
 
-textarea, select, input, button{
+textarea,
+select,
+input,
+button{
 width:100%;
-padding:10px;
+padding:12px;
 margin-top:10px;
 border-radius:10px;
+border:none;
+font-size:16px;
+box-sizing:border-box;
+}
+
+textarea{
+min-height:120px;
+resize:vertical;
 }
 
 button{
 background:#22c55e;
-border:none;
 color:white;
 cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+#status{
+margin-top:15px;
+font-weight:bold;
 }

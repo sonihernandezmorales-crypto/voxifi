@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voxifi</title>
 
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<meta name="theme-color" content="#0f172a">
 </head>
 
 <body>
@@ -18,47 +20,49 @@
 
 <video id="preview" controls></video>
 
-<br><br>
-
 <textarea id="text" placeholder="Escribe tu texto..."></textarea>
 
-<br>
-
-<!-- 🎤 20 VOCES REALES -->
 <select id="voiceSelect">
 
-<option value="es-MX-DaliaNeural">🇲🇽 Dalia</option>
-<option value="es-MX-JorgeNeural">🇲🇽 Jorge</option>
-<option value="es-MX-BeatrizNeural">🇲🇽 Beatriz</option>
-<option value="es-MX-CarlosNeural">🇲🇽 Carlos</option>
+<!-- 🇲🇽 MÉXICO -->
+<option value="es-MX-DaliaNeural">🇲🇽 Dalia (Mujer)</option>
+<option value="es-MX-JorgeNeural">🇲🇽 Jorge (Hombre)</option>
+<option value="es-MX-BeatrizNeural">🇲🇽 Beatriz (Mujer)</option>
+<option value="es-MX-CarlosNeural">🇲🇽 Carlos (Hombre)</option>
 
-<option value="es-ES-ElviraNeural">🇪🇸 Elvira</option>
-<option value="es-ES-AlvaroNeural">🇪🇸 Álvaro</option>
-<option value="es-ES-AbrilNeural">🇪🇸 Abril</option>
-<option value="es-ES-EliasNeural">🇪🇸 Elías</option>
+<!-- 🇪🇸 ESPAÑA -->
+<option value="es-ES-ElviraNeural">🇪🇸 Elvira (Mujer)</option>
+<option value="es-ES-AlvaroNeural">🇪🇸 Álvaro (Hombre)</option>
+<option value="es-ES-AbrilNeural">🇪🇸 Abril (Mujer)</option>
+<option value="es-ES-EliasNeural">🇪🇸 Elías (Hombre)</option>
 
-<option value="es-US-AriaNeural">🇺🇸 Aria</option>
-<option value="es-US-GuyNeural">🇺🇸 Guy</option>
-<option value="es-US-JennyNeural">🇺🇸 Jenny</option>
+<!-- 🇺🇸 ESPAÑOL USA -->
+<option value="es-US-AriaNeural">🇺🇸 Aria (Mujer)</option>
+<option value="es-US-GuyNeural">🇺🇸 Guy (Hombre)</option>
+<option value="es-US-JennyNeural">🇺🇸 Jenny (Mujer)</option>
 
-<option value="es-CO-SalomeNeural">🇨🇴 Salomé</option>
-<option value="es-CO-GonzaloNeural">🇨🇴 Gonzalo</option>
+<!-- 🇨🇴 COLOMBIA -->
+<option value="es-CO-SalomeNeural">🇨🇴 Salomé (Mujer)</option>
+<option value="es-CO-GonzaloNeural">🇨🇴 Gonzalo (Hombre)</option>
 
-<option value="es-AR-ElenaNeural">🇦🇷 Elena</option>
-<option value="es-AR-TomasNeural">🇦🇷 Tomás</option>
+<!-- 🇦🇷 ARGENTINA -->
+<option value="es-AR-ElenaNeural">🇦🇷 Elena (Mujer)</option>
+<option value="es-AR-TomasNeural">🇦🇷 Tomás (Hombre)</option>
 
-<option value="fr-FR-DeniseNeural">🇫🇷 Denise</option>
-<option value="de-DE-KatjaNeural">🇩🇪 Katja</option>
-<option value="it-IT-ElsaNeural">🇮🇹 Elsa</option>
-<option value="pt-BR-FranciscaNeural">🇧🇷 Francisca</option>
+<!-- 🇵🇪 PERÚ -->
+<option value="es-PE-CamilaNeural">🇵🇪 Camila (Mujer)</option>
+<option value="es-PE-AlexNeural">🇵🇪 Alex (Hombre)</option>
+
+<!-- 🇻🇪 VENEZUELA -->
+<option value="es-VE-PaolaNeural">🇻🇪 Paola (Mujer)</option>
+<option value="es-VE-SebastianNeural">🇻🇪 Sebastián (Hombre)</option>
+
+<!-- 🇨🇱 CHILE -->
+<option value="es-CL-CatalinaNeural">🇨🇱 Catalina (Mujer)</option>
 
 </select>
 
-<br><br>
-
 <audio id="audioPlayer" controls></audio>
-
-<br><br>
 
 <button onclick="generateAudio()">🔊 Generar audio</button>
 <button onclick="downloadAudio()">⬇ Descargar audio</button>
@@ -73,32 +77,57 @@
 const video = document.getElementById("preview");
 const audio = document.getElementById("audioPlayer");
 
-/* cargar video */
+/* preview video */
 document.getElementById("videoInput").addEventListener("change", function(e){
-    video.src = URL.createObjectURL(e.target.files[0]);
+
+    const file = e.target.files[0];
+
+    if(file){
+        video.src = URL.createObjectURL(file);
+    }
 });
 
 /* generar audio */
 async function generateAudio(){
 
-document.getElementById("status").innerText = "⏳ Generando...";
+    const text = document.getElementById("text").value;
+    const voice = document.getElementById("voiceSelect").value;
 
-const text = document.getElementById("text").value;
-const voice = document.getElementById("voiceSelect").value;
+    if(!text){
+        alert("Escribe texto primero");
+        return;
+    }
 
-await fetch("/audio", {
-method: "POST",
-headers: {"Content-Type":"application/x-www-form-urlencoded"},
-body: "text=" + encodeURIComponent(text) + "&voice=" + encodeURIComponent(voice)
-});
+    document.getElementById("status").innerText = "⏳ Generando audio...";
 
-audio.src = "/audio-file?t=" + Date.now();
-audio.load();
+    try{
 
-document.getElementById("status").innerText = "✔ Audio listo";
+        const response = await fetch("/audio", {
+            method: "POST",
+            headers: {
+                "Content-Type":"application/x-www-form-urlencoded"
+            },
+            body:
+                "text=" + encodeURIComponent(text) +
+                "&voice=" + encodeURIComponent(voice)
+        });
+
+        if(!response.ok){
+            throw new Error("Error generando audio");
+        }
+
+        audio.src = "/audio-file?t=" + Date.now();
+        audio.load();
+
+        document.getElementById("status").innerText = "✔ Audio listo";
+
+    }catch(error){
+        console.error(error);
+        document.getElementById("status").innerText = "❌ Error";
+    }
 }
 
-/* 🔥 SINCRONIZACIÓN PERFECTA */
+/* sincronización */
 video.addEventListener("play", () => {
     audio.currentTime = video.currentTime;
     audio.play();
@@ -112,44 +141,55 @@ video.addEventListener("seeked", () => {
     audio.currentTime = video.currentTime;
 });
 
-video.addEventListener("timeupdate", () => {
-    if (!video.paused) {
-        const diff = Math.abs(audio.currentTime - video.currentTime);
-        if (diff > 0.25) {
-            audio.currentTime = video.currentTime;
-        }
-    }
-});
-
 /* descargar audio */
 function downloadAudio(){
-window.location.href = "/download-audio";
+    window.location.href = "/download-audio";
 }
 
-/* export video */
-function exportVideo(){
+/* exportar video */
+async function exportVideo(){
 
-document.getElementById("status").innerText = "⏳ Exportando...";
+    const file = document.getElementById("videoInput").files[0];
+    const text = document.getElementById("text").value;
+    const voice = document.getElementById("voiceSelect").value;
 
-const file = document.getElementById("videoInput").files[0];
+    if(!file){
+        alert("Sube un video primero");
+        return;
+    }
 
-const formData = new FormData();
-formData.append("video", file);
-formData.append("text", document.getElementById("text").value);
-formData.append("voice", document.getElementById("voiceSelect").value);
+    document.getElementById("status").innerText = "⏳ Exportando video...";
 
-fetch("/upload", {
-method: "POST",
-body: formData
-})
-.then(r => r.blob())
-.then(blob => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "video_final.mp4";
-    a.click();
-    document.getElementById("status").innerText = "✔ Listo";
-});
+    const formData = new FormData();
+
+    formData.append("video", file);
+    formData.append("text", text);
+    formData.append("voice", voice);
+
+    try{
+
+        const response = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        if(!response.ok){
+            throw new Error("Error exportando video");
+        }
+
+        const blob = await response.blob();
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "video_final.mp4";
+        a.click();
+
+        document.getElementById("status").innerText = "✔ Video exportado";
+
+    }catch(error){
+        console.error(error);
+        document.getElementById("status").innerText = "❌ Error exportando";
+    }
 }
 
 </script>
