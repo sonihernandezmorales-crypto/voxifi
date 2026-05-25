@@ -3,7 +3,6 @@ import os
 import asyncio
 import edge_tts
 import time
-from moviepy.editor import VideoFileClip, AudioFileClip
 
 app = Flask(__name__)
 
@@ -14,6 +13,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 
+# -------------------------
+# VOICE GENERATION (EDGE-TTS)
+# -------------------------
 async def generate_voice(text, voice, path):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(path)
@@ -27,6 +29,9 @@ def run_async(coro):
     return result
 
 
+# -------------------------
+# ROUTES
+# -------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -69,6 +74,11 @@ def download_audio():
 
 @app.route("/upload", methods=["POST"])
 def upload():
+
+    # 🔥 IMPORT CORRECTO PARA RENDER (EVITA moviepy.editor ERROR)
+    import moviepy.video.io.VideoFileClip as vfc
+    import moviepy.audio.io.AudioFileClip as afc
+
     if "video" not in request.files:
         return jsonify({"error": "No hay video"}), 400
 
@@ -85,24 +95,4 @@ def upload():
     audio_path = os.path.join(UPLOAD_FOLDER, f"audio_{timestamp}.mp3")
     output_path = os.path.join(OUTPUT_FOLDER, f"video_final_{timestamp}.mp4")
 
-    video.save(video_path)
-
-    run_async(generate_voice(text, voice, audio_path))
-
-    video_clip = VideoFileClip(video_path)
-    audio_clip = AudioFileClip(audio_path)
-
-    final = video_clip.set_audio(audio_clip)
-
-    final.write_videofile(
-        output_path,
-        codec="libx264",
-        audio_codec="aac",
-        fps=24
-    )
-
-    return send_file(output_path, as_attachment=True)
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)
+    video.save(video
