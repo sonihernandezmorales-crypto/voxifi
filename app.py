@@ -14,7 +14,7 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 
 # -------------------------
-# VOICE GENERATION (EDGE-TTS)
+# VOICE GENERATION
 # -------------------------
 async def generate_voice(text, voice, path):
     communicate = edge_tts.Communicate(text, voice)
@@ -30,13 +30,16 @@ def run_async(coro):
 
 
 # -------------------------
-# ROUTES
+# HOME
 # -------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
+# -------------------------
+# AUDIO GENERATION
+# -------------------------
 @app.route("/audio", methods=["POST"])
 def audio():
     text = request.form.get("text")
@@ -72,10 +75,13 @@ def download_audio():
     return send_file(audio_path, as_attachment=True)
 
 
+# -------------------------
+# VIDEO + AUDIO
+# -------------------------
 @app.route("/upload", methods=["POST"])
 def upload():
 
-    # 🔥 IMPORT CORRECTO PARA RENDER (EVITA moviepy.editor ERROR)
+    # 🔥 IMPORT LOCAL (evita errores en Render startup)
     import moviepy.video.io.VideoFileClip as vfc
     import moviepy.audio.io.AudioFileClip as afc
 
@@ -95,4 +101,30 @@ def upload():
     audio_path = os.path.join(UPLOAD_FOLDER, f"audio_{timestamp}.mp3")
     output_path = os.path.join(OUTPUT_FOLDER, f"video_final_{timestamp}.mp4")
 
-    video.save(video
+    # guardar video
+    video.save(video_path)
+
+    # generar audio
+    run_async(generate_voice(text, voice, audio_path))
+
+    # combinar video + audio
+    video_clip = vfc.VideoFileClip(video_path)
+    audio_clip = afc.AudioFileClip(audio_path)
+
+    final = video_clip.set_audio(audio_clip)
+
+    final.write_videofile(
+        output_path,
+        codec="libx264",
+        audio_codec="aac",
+        fps=24
+    )
+
+    return send_file(output_path, as_attachment=True)
+
+
+# -------------------------
+# RUN LOCAL
+# -------------------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000, debug=True)
