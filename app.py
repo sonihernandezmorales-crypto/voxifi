@@ -19,6 +19,14 @@ async def generate_voice(text, voice, path):
     await communicate.save(path)
 
 
+def run_async(coro):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(coro)
+    loop.close()
+    return result
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -26,7 +34,6 @@ def index():
 
 @app.route("/audio", methods=["POST"])
 def audio():
-
     text = request.form.get("text")
     voice = request.form.get("voice")
 
@@ -35,14 +42,13 @@ def audio():
 
     audio_path = os.path.join(UPLOAD_FOLDER, "audio.mp3")
 
-    asyncio.run(generate_voice(text, voice, audio_path))
+    run_async(generate_voice(text, voice, audio_path))
 
     return jsonify({"ok": True})
 
 
 @app.route("/audio-file")
 def audio_file():
-
     audio_path = os.path.join(UPLOAD_FOLDER, "audio.mp3")
 
     if not os.path.exists(audio_path):
@@ -53,7 +59,6 @@ def audio_file():
 
 @app.route("/download-audio")
 def download_audio():
-
     audio_path = os.path.join(UPLOAD_FOLDER, "audio.mp3")
 
     if not os.path.exists(audio_path):
@@ -64,7 +69,6 @@ def download_audio():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-
     if "video" not in request.files:
         return jsonify({"error": "No hay video"}), 400
 
@@ -83,7 +87,7 @@ def upload():
 
     video.save(video_path)
 
-    asyncio.run(generate_voice(text, voice, audio_path))
+    run_async(generate_voice(text, voice, audio_path))
 
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path)
