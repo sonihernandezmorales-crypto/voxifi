@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_file, jsonify
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy import VideoFileClip, AudioFileClip
 import os
 import asyncio
 import edge_tts
