@@ -69,11 +69,13 @@ def upload():
     final = video_clip.set_audio(audio_clip)
 
     final.write_videofile(
-        output_path,
-        codec="libx264",
-        audio_codec="aac",
-        fps=24
-    )
+    output_path,
+    codec="libx264",
+    audio_codec="aac",
+    fps=24,
+    preset="medium",
+    ffmpeg_params=["-movflags", "+faststart"]
+)
 
     return send_file(output_path, as_attachment=True)
 
